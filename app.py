@@ -177,7 +177,25 @@ def chat_with_advisor():
         return jsonify({"response": response})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+@app.route('/api/risk-analysis', methods=['POST'])
+def analyze_financial_risk():
+    try:
+        data = request.json
+        if 'savings' not in data:
+            return jsonify({"error": "Current savings amount is required"}), 400
+            
+        transactions = list(transactions_collection.find())
+        for transaction in transactions:
+            transaction["_id"] = str(transaction["_id"])
+        
+        risk_service = RiskAnalysisService()
+        analysis = risk_service.analyze_risk(transactions, float(data['savings']))
+        
+        return jsonify({"analysis": analysis})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+        
     
 #only for testing purpose, will not be used in production setting!!
 @app.route('/test/visualizations', methods=['GET'])
