@@ -1,0 +1,8 @@
+flask
+flask-cors
+python-dotenv
+pandas
+plotly
+google-generativeai
+python-dateutil
+pymongo
