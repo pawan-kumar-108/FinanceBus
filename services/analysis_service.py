@@ -16,12 +16,14 @@ class AnalysisService:
         {spending_summary}
         
         Provide:
-        1. A detailed analysis of spending patterns (existing expenses are in Rupees written as Rs.)
-        2. Specific recommendations for reducing expenses 
-        3. Areas of unnecessary spending
-        4. Potential savings opportunities
+        1. Specific recommendations for reducing expenses after finding hidden patterns in the transactions
+        2. Areas of unnecessary spending that can be cut down
         
-        Format the response in a clear, structured manner.
+        Format the response in a clear, structured manner. All transaction data are in Indian Rupee represented as Rs.
+
+        Also, let the user know based on the spending pattern, is the user eligible to invest in stock or SIP or Mutual funds.
+
+        Answer all the questions in crisp points.
         """
         
         response = self.model.generate_content(prompt)
