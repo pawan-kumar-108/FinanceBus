@@ -144,23 +144,41 @@ def get_analysis():
         return jsonify({"error": str(e)}), 500
     
 
+# @app.route('/api/chat', methods=['POST'])
+# def chat_with_advisor():
+#     data = request.json
+#     if 'message' not in data:
+#         return jsonify({"error": "Message is required"}), 400
+    
+#     transactions = list(transactions_collection.find())
+#     for transaction in transactions:
+#         transaction["_id"] = str(transaction["_id"])
+    
+#     response = analysis_service.chat_response(data['message'], transactions)
+    
+#     return jsonify({
+#         "response": response
+#     })
+
 @app.route('/api/chat', methods=['POST'])
 def chat_with_advisor():
-    data = request.json
-    if 'message' not in data:
-        return jsonify({"error": "Message is required"}), 400
+    try:
+        data = request.json
+        if 'message' not in data:
+            return jsonify({"error": "Message is required"}), 400
+        
+        transactions = list(transactions_collection.find())
+        for transaction in transactions:
+            transaction["_id"] = str(transaction["_id"])
+        
+        # Use the already initialized service instance
+        response = analysis_service.chat_response(data['message'], transactions)
+        
+        return jsonify({"response": response})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
-    transactions = list(transactions_collection.find())
-    for transaction in transactions:
-        transaction["_id"] = str(transaction["_id"])
     
-    response = analysis_service.chat_response(data['message'], transactions)
-    
-    return jsonify({
-        "response": response
-    })
-
-
 #only for testing purpose, will not be used in production setting!!
 @app.route('/test/visualizations', methods=['GET'])
 def test_visualizations():
