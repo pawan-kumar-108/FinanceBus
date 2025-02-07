@@ -5,9 +5,10 @@ from models.transaction import Transaction
 from services.analysis_service import AnalysisService
 from services.visualization_service import VisualizationService
 from config import Config
-
 from services.risk_analysis import RiskAnalysisService
 from pymongo import MongoClient
+
+from services.goal import GoalAnalysisService
 
 from flask import render_template_string
 
@@ -22,7 +23,7 @@ transactions_collection = db["transactions"]
 # Initialize services
 analysis_service = AnalysisService()
 visualization_service = VisualizationService()
-
+risk_service = RiskAnalysisService()
 @app.route('/api/categories', methods=['GET'])
 def get_categories():
     return jsonify({"categories": Config.CATEGORIES})
@@ -178,6 +179,7 @@ def chat_with_advisor():
         return jsonify({"response": response})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
 
 @app.route('/api/risk-analysis', methods=['POST'])
 def analyze_financial_risk():
@@ -185,19 +187,24 @@ def analyze_financial_risk():
         data = request.json
         if 'savings' not in data:
             return jsonify({"error": "Current savings amount is required"}), 400
+        
+        try:
+            savings = float(data['savings'])
+        except ValueError:
+            return jsonify({"error": "Savings must be a valid number"}), 400
             
         transactions = list(transactions_collection.find())
         for transaction in transactions:
             transaction["_id"] = str(transaction["_id"])
         
-        risk_service = RiskAnalysisService()
-        analysis = risk_service.analyze_risk(transactions, float(data['savings']))
+        #risk_service = RiskAnalysisService()
+        analysis = risk_service.analyze_risk(transactions, savings)
         
-        return jsonify({"analysis": analysis})
+        return jsonify(analysis)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-        
     
+
 #only for testing purpose, will not be used in production setting!!
 @app.route('/test/visualizations', methods=['GET'])
 def test_visualizations():
@@ -243,8 +250,77 @@ def test_visualizations():
     </body>
     </html>
     """
+    #return render_template_string(html_template, graphs=visualizations)
+
+
+
+# Initialize the service
+goal_analysis_service = GoalAnalysisService()
+
+@app.route('/api/goals/short-term/analyze', methods=['POST'])
+def analyze_short_term_goal():
+    try:
+        data = request.json
+        required_fields = ['name', 'total_amount', 'due_amount', 'start_date', 'timeframe']
+        
+        if not all(field in data for field in required_fields):
+            return jsonify({"error": "Missing required fields"}), 400
+            
+        # Get transactions and emergency fund
+        transactions = list(transactions_collection.find())
+        emergency_fund = float(request.json.get('emergency_fund', 0))
+        
+        # Convert ObjectId to string for each transaction
+        for t in transactions:
+            t['_id'] = str(t['_id'])
+        
+        analysis = goal_analysis_service.analyze_short_term_goal(data, transactions, emergency_fund)
+        
+        return jsonify({"analysis": analysis})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/goals/long-term/analyze', methods=['POST'])
+def analyze_long_term_goal():
+    try:
+        data = request.json
+        required_fields = ['name', 'total_amount', 'due_amount', 'start_date', 'timeframe']
+        
+        if not all(field in data for field in required_fields):
+            return jsonify({"error": "Missing required fields"}), 400
+            
+        transactions = list(transactions_collection.find())
+        emergency_fund = float(request.json.get('emergency_fund', 0))
+        
+        for t in transactions:
+            t['_id'] = str(t['_id'])
+        
+        analysis = goal_analysis_service.analyze_long_term_goal(data, transactions, emergency_fund)
+        
+        return jsonify({"analysis": analysis})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/loan/analyze', methods=['POST'])
+def analyze_loan():
+    try:
+        data = request.json
+        required_fields = ['name', 'principal_amount', 'interest_rate', 'tenure']
+        
+        if not all(field in data for field in required_fields):
+            return jsonify({"error": "Missing required fields"}), 400
+            
+        transactions = list(transactions_collection.find())
+        for t in transactions:
+            t['_id'] = str(t['_id'])
+        
+        analysis = goal_analysis_service.analyze_loan_feasibility(data, transactions)
+        
+        return jsonify({"analysis": analysis})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
-    return render_template_string(html_template, graphs=visualizations)
+    
 
 if __name__ == '__main__':
     app.run(debug=True)
