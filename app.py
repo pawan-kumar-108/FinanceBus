@@ -6,6 +6,7 @@ from services.analysis_service import AnalysisService
 from services.visualization_service import VisualizationService
 from config import Config
 
+from services.risk_analysis import RiskAnalysisService
 from pymongo import MongoClient
 
 from flask import render_template_string
