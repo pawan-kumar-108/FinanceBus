@@ -321,6 +321,95 @@ def analyze_loan():
         return jsonify({"error": str(e)}), 500
     
     
+# Add to app.py
+
+from services.investment import InvestmentService
+
+# Initialize service
+investment_service = InvestmentService()
+
+@app.route('/api/investment/analyze', methods=['POST'])
+def analyze_investment_potential():
+    try:
+        data = request.json
+        required_fields = ['monthly_income', 'emergency_fund']
+        
+        if not all(field in data for field in required_fields):
+            return jsonify({"error": "Missing required fields"}), 400
+            
+        transactions = list(transactions_collection.find())
+        for t in transactions:
+            t['_id'] = str(t['_id'])
+        
+        analysis = investment_service.analyze_investment_potential(
+            transactions,
+            float(data['emergency_fund']),
+            float(data['monthly_income'])
+        )
+        
+        return jsonify({"analysis": analysis})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/savings/smart-plan', methods=['POST'])
+def get_smart_savings_plan():
+    try:
+        data = request.json
+        if 'monthly_income' not in data:
+            return jsonify({"error": "Monthly income is required"}), 400
+            
+        transactions = list(transactions_collection.find())
+        for t in transactions:
+            t['_id'] = str(t['_id'])
+        
+        plan = investment_service.get_smart_savings_plan(
+            transactions,
+            float(data['monthly_income'])
+        )
+        
+        return jsonify({"plan": plan})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/investment/opportunities', methods=['POST'])
+def get_investment_opportunities():
+    try:
+        data = request.json
+        if 'emergency_fund' not in data:
+            return jsonify({"error": "Emergency fund amount is required"}), 400
+            
+        transactions = list(transactions_collection.find())
+        for t in transactions:
+            t['_id'] = str(t['_id'])
+        
+        opportunities = investment_service.suggest_investment_opportunities(
+            transactions,
+            float(data['emergency_fund'])
+        )
+        
+        return jsonify({"opportunities": opportunities})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/risk/management-plan', methods=['POST'])
+def get_risk_management_plan():
+    try:
+        data = request.json
+        if 'monthly_income' not in data:
+            return jsonify({"error": "Monthly income is required"}), 400
+            
+        transactions = list(transactions_collection.find())
+        for t in transactions:
+            t['_id'] = str(t['_id'])
+        
+        plan = investment_service.get_risk_management_plan(
+            transactions,
+            float(data['monthly_income'])
+        )
+        
+        return jsonify({"plan": plan})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
